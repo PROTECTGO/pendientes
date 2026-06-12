@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pendientes del Día · ProtectGo</title>
+<style>
+  :root{
+    --navy:#002F3D; --teal:#A8D4CF; --teal-d:#5FA8A0; --bg:#F4F7F7;
+    --ink:#1c2b2e; --mut:#6b7d80; --ok:#1e8e5a; --ok-bg:#e3f4ec;
+    --pend:#b96a00; --pend-bg:#fdf0dd; --line:#dde7e7; --red:#c0392b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif}
+  body{background:var(--bg);color:var(--ink);min-height:100vh}
+
+  /* ---------- LOGIN ---------- */
+  #login{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+  .lbox{background:#fff;border-radius:14px;padding:34px 30px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  .wordmark{font-weight:800;letter-spacing:.18em;color:var(--navy);font-size:15px;margin-bottom:2px}
+  .lbox h1{font-size:21px;color:var(--navy);margin:4px 0 2px}
+  .lbox p{font-size:13px;color:var(--mut);margin-bottom:18px}
+  .lbox label{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--mut);text-transform:uppercase;margin:12px 0 4px}
+  .lbox input{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:15px;outline:none}
+  .lbox input:focus{border-color:var(--teal-d)}
+  .lbox button{width:100%;margin-top:20px;padding:12px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer}
+  .lbox button:disabled{opacity:.6}
+  #lerr{color:var(--red);font-size:13px;margin-top:10px;display:none}
+  .hint{font-size:11.5px;color:var(--mut);margin-top:4px}
+
+  /* ---------- APP ---------- */
+  #app{display:none;max-width:760px;margin:0 auto;padding:0 14px 60px}
+  header{background:var(--navy);color:#fff;margin:0 -14px;padding:18px 20px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  header .wm{font-weight:800;letter-spacing:.18em;font-size:13px;color:var(--teal)}
+  header h2{font-size:18px;font-weight:700;flex:1;min-width:200px}
+  #who{font-size:12.5px;color:var(--teal);text-align:right}
+  #logout{background:transparent;border:1px solid var(--teal);color:var(--teal);border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-top:16px;box-shadow:0 2px 8px rgba(0,47,61,.05)}
+  .card h3{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);margin-bottom:12px;border-bottom:2px solid var(--teal);padding-bottom:6px}
+  .frow{display:flex;gap:10px;flex-wrap:wrap}
+  .frow .fld{flex:1;min-width:180px}
+  .fld label{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
+  .fld input,.fld textarea{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:14.5px;outline:none;resize:vertical;font-family:inherit}
+  .fld input:focus,.fld textarea:focus{border-color:var(--teal-d)}
+  #btnAdd{margin-top:12px;background:var(--navy);color:#fff;border:none;border-radius:8px;padding:11px 22px;font-size:14px;font-weight:700;cursor:pointer}
+  #btnAdd:disabled{opacity:.6}
+  #addok{display:none;color:var(--ok);font-size:13px;margin-left:10px;font-weight:600}
+
+  /* filters */
+  .bar{display:flex;align-items:center;gap:8px;margin-top:22px;flex-wrap:wrap}
+  .chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font-size:13px;cursor:pointer;color:var(--mut);font-weight:600}
+  .chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  #cnt{margin-left:auto;font-size:12.5px;color:var(--mut)}
+
+  /* list */
+  .day{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--teal-d);margin:20px 4px 6px}
+  .item{background:#fff;border:1px solid var(--line);border-radius:10px;padding:13px 14px;margin-top:8px;display:flex;gap:12px;align-items:flex-start}
+  .item.done{opacity:.62}
+  .ck{width:24px;height:24px;min-width:24px;border:2px solid var(--teal-d);border-radius:6px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;margin-top:2px}
+  .item.done .ck{background:var(--ok);border-color:var(--ok)}
+  .body{flex:1;min-width:0}
+  .cli{font-weight:700;font-size:15px;color:var(--navy)}
+  .item.done .cli{text-decoration:line-through}
+  .des{font-size:13.5px;margin-top:3px;white-space:pre-wrap;word-wrap:break-word}
+  .meta{font-size:11.5px;color:var(--mut);margin-top:6px}
+  .meta b{color:var(--teal-d)}
+  .st{font-size:10.5px;font-weight:800;letter-spacing:.06em;border-radius:999px;padding:3px 10px;text-transform:uppercase;white-space:nowrap}
+  .st.p{background:var(--pend-bg);color:var(--pend)}
+  .st.h{background:var(--ok-bg);color:var(--ok)}
+  .del{border:none;background:none;color:#c9d6d6;font-size:16px;cursor:pointer;padding:2px 4px}
+  .del:hover{color:var(--red)}
+  #empty{text-align:center;color:var(--mut);font-size:14px;padding:40px 0;display:none}
+  #loading{text-align:center;color:var(--mut);font-size:13px;padding:30px 0}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="lbox">
+    <div class="wordmark">PROTECTGO</div>
+    <h1>Pendientes del Día</h1>
+    <p>Ingresa con tu usuario de Quick Quotes.</p>
+    <label>Usuario</label>
+    <input id="lu" type="text" placeholder="nombre.apellido" autocomplete="username">
+    <div class="hint">Solo el usuario — el @protectgoservices.com se agrega solo.</div>
+    <label>Contraseña</label>
+    <input id="lp" type="password" autocomplete="current-password">
+    <button id="lbtn">Entrar</button>
+    <div id="lerr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div>
+      <div class="wm">PROTECTGO</div>
+      <h2>Pendientes del Día</h2>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <div id="who"></div>
+      <button id="logout">Salir</button>
+    </div>
+  </header>
+
+  <div class="card" id="formCard">
+    <h3 id="formTitle">Montar pendiente para Andrés</h3>
+    <div class="frow">
+      <div class="fld"><label>Cliente</label><input id="fCli" placeholder="Nombre del cliente"></div>
+    </div>
+    <div class="frow" style="margin-top:10px">
+      <div class="fld"><label>Descripción de la tarea / gestión</label><textarea id="fDes" rows="2" placeholder="¿Qué necesitas que haga Andrés?"></textarea></div>
+    </div>
+    <button id="btnAdd">Agregar pendiente</button><span id="addok">✓ Montado</span>
+  </div>
+
+  <div class="bar">
+    <button class="chip on" data-f="pendiente">Pendientes</button>
+    <button class="chip" data-f="hecho">Hechos</button>
+    <button class="chip" data-f="todos">Todos</button>
+    <span id="cnt"></span>
+  </div>
+
+  <div id="loading">Cargando…</div>
+  <div id="list"></div>
+  <div id="empty">No hay pendientes aquí. 🎉</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SB_URL = 'https://bwqzypuiqgxzsrtsueab.supabase.co';
+const SB_KEY = 'sb_publishable_VbA94M3mF-Z6kgtPnda-cQ_diKF8L49';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+const $ = id => document.getElementById(id);
+let me = null, rows = [], filter = 'pendiente', chan = null, isAdmin = false;
+
+/* ---------- helpers ---------- */
+const nameFromEmail = e => e.split('@')[0].split('.')
+  .map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+const esc = s => (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dayKey = iso => { const d = new Date(iso); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+function dayLabel(k){
+  const today = dayKey(new Date().toISOString());
+  const y = dayKey(new Date(Date.now()-864e5).toISOString());
+  if(k===today) return 'Hoy';
+  if(k===y) return 'Ayer';
+  const [Y,M,D] = k.split('-');
+  return new Date(+Y, M-1, +D).toLocaleDateString('es-CO',{weekday:'long', day:'numeric', month:'long'});
+}
+const hora = iso => new Date(iso).toLocaleTimeString('es-CO',{hour:'numeric',minute:'2-digit'});
+
+/* ---------- auth ---------- */
+async function tryLogin(){
+  let u = $('lu').value.trim(), p = $('lp').value;
+  if(!u || !p) return;
+  if(!u.includes('@')) u += '@protectgoservices.com';
+  $('lbtn').disabled = true; $('lerr').style.display = 'none';
+  const { data, error } = await sb.auth.signInWithPassword({ email: u.toLowerCase(), password: p });
+  $('lbtn').disabled = false;
+  if(error){ $('lerr').textContent = 'Usuario o contraseña incorrectos.'; $('lerr').style.display = 'block'; return; }
+  enter(data.user);
+}
+async function enter(user){
+  me = user;
+  const { data: adm } = await sb.from('pendientes_admins').select('email');
+  isAdmin = (adm || []).some(a => a.email === me.email);
+  $('login').style.display = 'none';
+  $('app').style.display = 'block';
+  $('who').textContent = nameFromEmail(me.email) + (isAdmin ? ' · Admin' : '');
+  if(isAdmin){
+    $('formCard').style.display = 'none';
+    document.querySelector('header h2').textContent = 'Pendientes del Día — Todos los agentes';
+  } else {
+    document.querySelector('header h2').textContent = 'Mis pendientes para Andrés';
+  }
+  load(); subscribe();
+}
+$('lbtn').onclick = tryLogin;
+$('lp').addEventListener('keydown', e => { if(e.key==='Enter') tryLogin(); });
+$('logout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+sb.auth.getSession().then(({data:{session}}) => { if(session) enter(session.user); });
+
+/* ---------- data ---------- */
+async function load(){
+  const since = new Date(Date.now() - 30*864e5).toISOString();
+  const { data, error } = await sb.from('pendientes').select('*')
+    .gte('created_at', since).order('created_at', { ascending:false });
+  $('loading').style.display = 'none';
+  if(error){ alert('Error cargando: '+error.message); return; }
+  rows = data || []; render();
+}
+function subscribe(){
+  if(chan) sb.removeChannel(chan);
+  chan = sb.channel('pendientes-live')
+    .on('postgres_changes', { event:'*', schema:'public', table:'pendientes' }, () => load())
+    .subscribe();
+  document.addEventListener('visibilitychange', () => { if(!document.hidden) load(); });
+}
+
+async function add(){
+  const cli = $('fCli').value.trim(), des = $('fDes').value.trim();
+  if(!cli || !des){ alert('Completa el cliente y la descripción.'); return; }
+  $('btnAdd').disabled = true;
+  const { error } = await sb.from('pendientes').insert({
+    cliente: cli, descripcion: des,
+    agente: nameFromEmail(me.email), agente_email: me.email
+  });
+  $('btnAdd').disabled = false;
+  if(error){ alert('Error guardando: '+error.message); return; }
+  $('fCli').value = ''; $('fDes').value = ''; $('fCli').focus();
+  $('addok').style.display = 'inline'; setTimeout(() => $('addok').style.display = 'none', 1800);
+  load();
+}
+$('btnAdd').onclick = add;
+
+async function toggle(id, estado){
+  if(!isAdmin) return;
+  const nuevo = estado === 'pendiente' ? 'hecho' : 'pendiente';
+  const { error } = await sb.from('pendientes')
+    .update({ estado: nuevo, done_at: nuevo === 'hecho' ? new Date().toISOString() : null })
+    .eq('id', id);
+  if(error){ alert('Error: '+error.message); return; }
+  load();
+}
+async function delItem(id){
+  if(!confirm('¿Eliminar este pendiente?')) return;
+  const { error } = await sb.from('pendientes').delete().eq('id', id);
+  if(error){ alert('Solo puedes eliminar los pendientes que tú montaste.'); return; }
+  load();
+}
+
+/* ---------- render ---------- */
+document.querySelectorAll('.chip').forEach(c => c.onclick = () => {
+  document.querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
+  c.classList.add('on'); filter = c.dataset.f; render();
+});
+
+function render(){
+  const vis = rows.filter(r => filter === 'todos' || r.estado === filter);
+  const nPend = rows.filter(r => r.estado === 'pendiente').length;
+  $('cnt').textContent = nPend + ' pendiente' + (nPend === 1 ? '' : 's') + ' por hacer';
+  const list = $('list'); list.innerHTML = '';
+  $('empty').style.display = vis.length ? 'none' : 'block';
+  let lastDay = null;
+  vis.forEach(r => {
+    const k = dayKey(r.created_at);
+    if(k !== lastDay){
+      lastDay = k;
+      const d = document.createElement('div');
+      d.className = 'day'; d.textContent = dayLabel(k);
+      list.appendChild(d);
+    }
+    const it = document.createElement('div');
+    it.className = 'item' + (r.estado === 'hecho' ? ' done' : '');
+    it.innerHTML =
+      (isAdmin
+        ? '<button class="ck" title="Marcar ' + (r.estado === 'pendiente' ? 'hecho' : 'pendiente') + '">' + (r.estado === 'hecho' ? '✓' : '') + '</button>'
+        : '<div class="ck" style="cursor:default;border-color:' + (r.estado === 'hecho' ? 'var(--ok);background:var(--ok)' : 'var(--line)') + '">' + (r.estado === 'hecho' ? '✓' : '') + '</div>') +
+      '<div class="body">' +
+        '<div class="cli">' + esc(r.cliente) + '</div>' +
+        '<div class="des">' + esc(r.descripcion) + '</div>' +
+        '<div class="meta">Montado por <b>' + esc(r.agente) + '</b> · ' + hora(r.created_at) +
+          (r.estado === 'hecho' && r.done_at ? ' · hecho ' + hora(r.done_at) : '') + '</div>' +
+      '</div>' +
+      '<span class="st ' + (r.estado === 'hecho' ? 'h' : 'p') + '">' + (r.estado === 'hecho' ? 'Hecho' : 'Pendiente') + '</span>' +
+      ((r.agente_email === me.email || isAdmin) ? '<button class="del" title="Eliminar">✕</button>' : '');
+    const ckb = it.querySelector('button.ck'); if(ckb) ckb.onclick = () => toggle(r.id, r.estado);
+    const db = it.querySelector('.del'); if(db) db.onclick = () => delItem(r.id);
+    list.appendChild(it);
+  });
+}
+</script>
+</body>
+</html>
