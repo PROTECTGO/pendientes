@@ -421,13 +421,17 @@ async function renInit(){
   else if (mine && mine.rol === "lider") renRole = "lider";
   else if (mine) renRole = "miembro";
   else renRole = null;
-  if ($("navRen")) $("navRen").style.display = (renRole !== null) ? "flex" : "none";
+  const isRen = (renRole !== null);
+  const navSamu = document.querySelector('[data-nav="samu"]');
+  if (navSamu) navSamu.style.display = (isAdmin || !isRen) ? "flex" : "none";
+  if ($("navRen")) $("navRen").style.display = isRen ? "flex" : "none";
   if (renRole === "admin" || renRole === "lider"){
     $("renAsig").innerHTML = equipo.map(e => '<option value="'+e.email+'|'+esc(e.nombre)+'">'+esc(e.nombre)+(e.rol==="lider"?" (líder)":"")+'</option>').join("");
     $("renFormCard").style.display = "";
   } else {
     $("renFormCard").style.display = "none";
   }
+  if (isRen && !isAdmin) switchArea("ren");
 }
 
 function switchArea(a){
