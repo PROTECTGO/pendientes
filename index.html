@@ -228,7 +228,7 @@ async function enter(user){
   $('who').textContent = nameFromEmail(me.email) + (isAdmin ? ' · Admin' : '');
   if(isAdmin){
     $('formCard').style.display = 'none';
-    document.querySelector('header h2').textContent = '¿Qué hay pa' hoy? — Todos los agentes';
+    document.querySelector('header h2').textContent = "¿Qué hay pa' hoy? — Todos los agentes";
   } else {
     document.querySelector('header h2').textContent = 'Mis pendientes para Andrés';
   }
