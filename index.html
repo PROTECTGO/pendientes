@@ -155,6 +155,48 @@
   #renOk{display:none;color:var(--ok);font-size:13px;margin-left:10px;font-weight:600}
   #renLoading{text-align:center;color:var(--mut);font-size:13px;padding:30px 0;font-family:var(--font-num)}
   #renEmpty{text-align:center;color:var(--mut);font-size:14px;padding:40px 0}
+
+  /* ===== Vista Árbol (solo admin/líder) ===== */
+  #renViewToggle{display:inline-flex;gap:4px;background:var(--mint-ghost);border:1px solid var(--line);border-radius:999px;padding:5px;margin-bottom:6px}
+  .vbtn{border:none;background:transparent;border-radius:999px;padding:7px 16px;font-size:13px;font-weight:600;color:var(--mut);cursor:pointer;font-family:var(--font-body)}
+  .vbtn.on{background:var(--ink);color:#fff}
+  #renTree{overflow-x:auto;padding-top:8px}
+  .tree,.tree ul{display:flex;justify-content:center;padding:0;margin:0;list-style:none}
+  .tree ul{padding-top:22px;position:relative}
+  .tree li{list-style:none;position:relative;padding:22px 9px 0;text-align:center}
+  .tree li::before,.tree li::after{content:"";position:absolute;top:0;right:50%;border-top:2px solid #D7E0E8;width:50%;height:22px}
+  .tree li::after{right:auto;left:50%;border-left:2px solid #D7E0E8}
+  .tree li:only-child::after,.tree li:only-child::before{display:none}
+  .tree li:only-child{padding-top:0}
+  .tree li:first-child::before,.tree li:last-child::after{border:0 none}
+  .tree li:last-child::before{border-right:2px solid #D7E0E8}
+  .tree ul ul::before{content:"";position:absolute;top:0;left:50%;border-left:2px solid #D7E0E8;width:0;height:22px}
+  .tree .node{display:inline-block;min-width:148px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 13px;box-shadow:0 1px 3px rgba(27,45,58,.05);text-align:left;cursor:pointer}
+  .tree .node.ink{background:var(--grad);border:none;color:#fff}
+  .tree .node.sel{border-color:var(--mint);box-shadow:0 0 0 3px rgba(45,191,163,.25)}
+  .tree .nm{font-family:var(--font-title);font-weight:800;font-size:13px;color:var(--ink)}
+  .tree .node.ink .nm{color:#fff}
+  .tree .rl{font-size:10.5px;color:var(--mut);margin-top:2px}
+  .tree .node.ink .rl{color:var(--mint)}
+  .tree .esc{color:#F4C77A;font-weight:700}
+  .tree .node:not(.ink) .esc{color:#B8841F}
+  .chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+  .c{font-family:var(--font-num);font-size:9.5px;font-weight:600;border-radius:999px;padding:3px 8px}
+  .c-pend{background:#FBF3E2;color:#B8841F}
+  .c-esc{background:#B8841F;color:#fff}
+  .c-hecho{background:rgba(45,191,163,.14);color:#1F9D6B}
+  .tree .muted{color:#9aa8b2;font-size:10.5px;margin-top:7px;font-style:italic}
+  .detail{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:0 1px 3px rgba(27,45,58,.05)}
+  .dhead{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:4px}
+  .av{width:30px;height:30px;border-radius:8px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-title);font-weight:800;font-size:12px}
+  .dh-nm{font-family:var(--font-title);font-weight:800;font-size:15px;color:var(--ink)}
+  .dh-rl{font-size:11.5px;color:var(--mut)}
+  .btask{display:flex;align-items:center;gap:10px;background:#F8FBFA;border:1px solid #EEF3F1;border-radius:9px;padding:9px 12px;margin-top:9px}
+  .btask .ti{flex:1;font-size:12.5px;color:var(--ink-body)}
+  .pill{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;border-radius:999px;padding:3px 9px;white-space:nowrap;flex-shrink:0}
+  .p-pend{background:#FBF3E2;color:#B8841F}
+  .p-esc{background:#B8841F;color:#fff}
+  .p-hecho{background:rgba(45,191,163,.14);color:#1F9D6B}
 </style>
 </head>
 <body>
@@ -225,6 +267,10 @@
   </div><!-- /#paneSamu -->
 
   <div id="paneRen" style="display:none">
+    <div id="renViewToggle" style="display:none">
+      <button class="vbtn on" data-view="lista">Lista</button>
+      <button class="vbtn" data-view="arbol">Árbol</button>
+    </div>
     <div class="seg" id="renSeg">
       <button class="segbtn on" data-fn="renovacion">Renovación</button>
       <button class="segbtn" data-fn="retencion">Retención</button>
@@ -260,6 +306,10 @@
     <div id="renLoading">Cargando…</div>
     <div id="renList"></div>
     <div id="renEmpty" style="display:none">No hay tareas aquí. 🎉</div>
+    <div id="renTree" style="display:none">
+      <div id="renTreeWrap"></div>
+      <div id="renDetail"></div>
+    </div>
   </div>
     </div><!-- /.main -->
   </div><!-- /.shell -->
@@ -427,10 +477,10 @@ async function renInit(){
   if ($("navRen")) $("navRen").style.display = isRen ? "flex" : "none";
   if (renRole === "admin" || renRole === "lider"){
     $("renAsig").innerHTML = equipo.map(e => '<option value="'+e.email+'|'+esc(e.nombre)+'">'+esc(e.nombre)+(e.rol==="lider"?" (líder)":"")+'</option>').join("");
-    $("renFormCard").style.display = "";
-  } else {
-    $("renFormCard").style.display = "none";
   }
+  const canTree = (renRole === "admin" || renRole === "lider");
+  if ($("renViewToggle")) $("renViewToggle").style.display = canTree ? "inline-flex" : "none";
+  setRenMode("lista");
   if (isRen && !isAdmin) switchArea("ren");
 }
 
@@ -453,7 +503,7 @@ async function renLoad(){
   const { data, error } = await sb.from("tareas_renovacion").select("*").order("created_at", { ascending:false });
   if ($("renLoading")) $("renLoading").style.display = "none";
   if (error){ console.error(error); return; }
-  renRows = data || []; renRender();
+  renRows = data || []; if (renMode === "arbol") renRenderTree(); else renRender();
 }
 function renSubscribe(){
   if (renChan) sb.removeChannel(renChan);
@@ -590,6 +640,73 @@ async function loadNotas(id){
     ? data.map(n => '<div class="nota"><b>'+esc(n.autor_nombre)+'</b> · '+hora(n.created_at)+'<div>'+esc(n.texto)+'</div></div>').join("")
     : '<div style="font-size:12px;color:var(--mut);padding:4px">Sin notas aún.</div>';
 }
+
+let renMode = "lista", renSelPerson = null;
+function setRenMode(mode){
+  renMode = mode;
+  document.querySelectorAll("#renViewToggle .vbtn").forEach(b => b.classList.toggle("on", b.dataset.view === mode));
+  const lista = (mode === "lista");
+  const canManage = (renRole === "admin" || renRole === "lider");
+  if ($("renFormCard")) $("renFormCard").style.display = (lista && canManage) ? "" : "none";
+  if ($("renBar")) $("renBar").style.display = lista ? "flex" : "none";
+  if ($("renList")) $("renList").style.display = lista ? "" : "none";
+  if (!lista && $("renEmpty")) $("renEmpty").style.display = "none";
+  if ($("renTree")) $("renTree").style.display = lista ? "none" : "block";
+  if (lista) renRender(); else renRenderTree();
+}
+function renCounts(scope, email){
+  const t = scope.filter(r => r.asignado_email === email);
+  return { pend:t.filter(r=>r.estado==="pendiente").length, esc:t.filter(r=>r.estado==="escalado").length, hecho:t.filter(r=>r.estado==="hecho").length, total:t.length };
+}
+function renChips(c){
+  if (!c.total) return '<div class="muted">sin tareas</div>';
+  let h = "";
+  if (c.pend) h += '<span class="c c-pend">'+c.pend+' pend</span>';
+  if (c.esc) h += '<span class="c c-esc">'+c.esc+' escalada'+(c.esc>1?"s":"")+'</span>';
+  if (c.hecho) h += '<span class="c c-hecho">'+c.hecho+' hecha'+(c.hecho>1?"s":"")+'</span>';
+  return '<div class="chips">'+h+'</div>';
+}
+function renRenderTree(){
+  const scope = renRows.filter(r => renView === "todas" || r.funcion === renView);
+  const lider = equipo.find(e => e.rol === "lider");
+  const miembros = equipo.filter(e => e.rol === "miembro");
+  const escAndres = scope.filter(r => r.estado==="escalado" && r.escalado_a==="andres").length;
+  const escLider = scope.filter(r => r.estado==="escalado" && r.escalado_a==="lider").length;
+  if (!renSelPerson && miembros[0]) renSelPerson = miembros[0].email;
+  const members = miembros.map(m => {
+    const c = renCounts(scope, m.email);
+    return '<li><div class="node'+(renSelPerson===m.email?" sel":"")+'" onclick="renSelectPerson(\''+m.email+'\')">'
+      +'<div class="nm">'+esc(m.nombre)+'</div><div class="rl">Equipo</div>'+renChips(c)+'</div></li>';
+  }).join("");
+  const liderC = lider ? renCounts(scope, lider.email) : {total:0};
+  const liderEmail = lider ? lider.email : "";
+  const tree = '<ul class="tree"><li>'
+    + '<div class="node ink"><div class="nm">Dirección · Andrés</div><div class="rl">monta'+(escAndres?' · <span class="esc">'+escAndres+' escalada'+(escAndres>1?"s":"")+' a ti ↑</span>':'')+'</div></div>'
+    + '<ul><li>'
+    + '<div class="node ink'+(renSelPerson===liderEmail?" sel":"")+'" onclick="renSelectPerson(\''+liderEmail+'\')"><div class="nm">'+(lider?esc(lider.nombre):"Angélica")+' · Líder</div><div class="rl">'+scope.length+' en el área'+(escLider?' · <span class="esc">'+escLider+' escalada'+(escLider>1?"s":"")+' ↑</span>':'')+'</div>'+(liderC.total?renChips(liderC):"")+'</div>'
+    + '<ul>'+(members||'<li><div class="muted">Sin equipo</div></li>')+'</ul>'
+    + '</li></ul></li></ul>';
+  $("renTreeWrap").innerHTML = tree;
+  renDetail();
+}
+function renSelectPerson(email){ renSelPerson = email; renRenderTree(); }
+function renDetail(){
+  const scope = renRows.filter(r => renView === "todas" || r.funcion === renView);
+  const tasks = scope.filter(r => r.asignado_email === renSelPerson);
+  const person = equipo.find(e => e.email === renSelPerson);
+  const nm = person ? person.nombre : "—";
+  const ini = nm.split(" ").map(w=>w[0]||"").slice(0,2).join("").toUpperCase();
+  const TL = {appointment:"Appointment",llamada:"Llamada",perfilamiento:"Perfilamiento",renovacion:"Renovación",acceso:"Acceso",gestion:"Gestión"};
+  let rows = tasks.map(r => {
+    const pill = r.estado==="hecho" ? '<span class="pill p-hecho">Hecho</span>'
+      : r.estado==="escalado" ? '<span class="pill p-esc">Escalado ↑</span>'
+      : '<span class="pill p-pend">Pendiente</span>';
+    return '<div class="btask"><span class="tag alt">'+(TL[r.tipo]||r.tipo)+'</span><span class="ti">'+esc(r.titulo)+(r.cliente?' · <b>'+esc(r.cliente)+'</b>':'')+'</span>'+pill+'</div>';
+  }).join("");
+  if (!tasks.length) rows = '<div class="muted" style="margin-top:10px;color:#9aa8b2;font-style:italic">Sin tareas asignadas.</div>';
+  $("renDetail").innerHTML = '<div class="detail"><div class="dhead"><div class="av">'+ini+'</div><div><div class="dh-nm">'+esc(nm)+'</div><div class="dh-rl">'+tasks.length+' tarea'+(tasks.length===1?"":"s")+'</div></div></div>'+rows+'</div>';
+}
+document.querySelectorAll("#renViewToggle .vbtn").forEach(b => b.onclick = () => setRenMode(b.dataset.view));
 
 /* handlers de controles del pane Renovación */
 document.querySelectorAll("#renSeg .segbtn").forEach(b => b.onclick = () => {
