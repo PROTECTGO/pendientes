@@ -197,6 +197,13 @@
   .p-pend{background:#FBF3E2;color:#B8841F}
   .p-esc{background:#B8841F;color:#fff}
   .p-hecho{background:rgba(45,191,163,.14);color:#1F9D6B}
+  .prio{font-family:var(--font-num);font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;border-radius:999px;padding:3px 9px;white-space:nowrap}
+  .p-alta{background:#FCEEEC;color:#C0392B}
+  .p-med{background:#FBF3E2;color:#B8841F}
+  .p-baja{background:rgba(45,191,163,.14);color:#1F9D6B}
+  .c-alta{background:#FCEEEC;color:#C0392B}
+  .item.alta{border-color:#F0C2BD;background:#FFF8F7}
+  .tree .node.altared{border-color:#F0C2BD}
 </style>
 </head>
 <body>
@@ -518,9 +525,12 @@ function kpi(l,v,color){ return '<div class="kpi"><div class="l">'+l+'</div><div
 function renRender(){
   const scope = renRows.filter(r => renView === "todas" || r.funcion === renView);
   const vis = scope.filter(r => renFilter === "todas" || r.estado === renFilter);
+  const prank = {alta:0, media:1, baja:2};
+  vis.sort((a,b) => { const pa=renPrio(a), pb=renPrio(b); const ra=pa?prank[pa.k]:3, rb=pb?prank[pb.k]:3; if(ra!==rb) return ra-rb; return new Date(b.created_at)-new Date(a.created_at); });
+  const altaN = scope.filter(r => { const p=renPrio(r); return p && p.k==="alta"; }).length;
   $("renKpis").innerHTML =
     kpi("Asignadas", scope.length) +
-    kpi("Pendientes", scope.filter(r=>r.estado==="pendiente").length) +
+    kpi("Alta", altaN, "#D5594F") +
     kpi("Escaladas", scope.filter(r=>r.estado==="escalado").length, "#B8841F") +
     kpi("Hechas", scope.filter(r=>r.estado==="hecho").length, "#1F9D6B");
   const nPend = scope.filter(r=>r.estado!=="hecho").length;
@@ -534,14 +544,15 @@ function renCard(r){
   const canManage = (renRole === "admin" || renRole === "lider");
   const isAssignee = r.asignado_email === me.email;
   const it = document.createElement("div");
-  it.className = "item" + (r.estado==="hecho"?" done":"") + (r.estado==="escalado"?" esc":"");
+  const prio = renPrio(r);
+  it.className = "item" + (r.estado==="hecho"?" done":"") + (r.estado==="escalado"?" esc":"") + (prio&&prio.k==="alta"?" alta":"");
   const tipoLabel = {appointment:"Appointment",llamada:"Llamada",perfilamiento:"Perfilamiento",renovacion:"Renovación",acceso:"Acceso",gestion:"Gestión"}[r.tipo] || r.tipo;
   const estPill = r.estado==="hecho" ? '<span class="st h">Hecho</span>'
     : r.estado==="escalado" ? '<span class="st e">Escalado'+(r.escalado_a==="andres"?" a dirección":" a Angélica")+'</span>'
     : '<span class="st p">Pendiente</span>';
   const fnTag = '<span class="tag alt">'+(r.funcion==="retencion"?"Retención":"Renovación")+'</span>';
   it.innerHTML = '<div class="rbody">'
-    + '<div class="rtop"><span class="tag">'+esc(tipoLabel)+'</span>'+fnTag+estPill+'</div>'
+    + '<div class="rtop"><span class="tag">'+esc(tipoLabel)+'</span>'+fnTag+estPill+(prio?'<span class="prio '+prio.cls+'">'+prio.dot+' '+prio.label+'</span>':'')+'</div>'
     + '<div class="cli">'+esc(r.titulo)+'</div>'
     + (r.cliente ? '<div class="des">Cliente: '+esc(r.cliente)+'</div>' : '')
     + '<div class="meta">Montado por <b>'+esc(r.creado_por_nombre)+'</b>'+(r.asignado_nombre?' · asignado a <b>'+esc(r.asignado_nombre)+'</b>':'')+' · '+hora(r.created_at)+'</div>'
@@ -654,13 +665,21 @@ function setRenMode(mode){
   if ($("renTree")) $("renTree").style.display = lista ? "none" : "block";
   if (lista) renRender(); else renRenderTree();
 }
+function renPrio(r){
+  if (r.estado === "hecho") return null;
+  const days = Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000);
+  if (days >= 2) return {k:"alta", cls:"p-alta", dot:"🔴", label:"Alta · "+days+" días"};
+  if (days >= 1) return {k:"media", cls:"p-med", dot:"🟡", label:"Atención · 1 día"};
+  return {k:"baja", cls:"p-baja", dot:"🟢", label:"Hoy"};
+}
 function renCounts(scope, email){
   const t = scope.filter(r => r.asignado_email === email);
-  return { pend:t.filter(r=>r.estado==="pendiente").length, esc:t.filter(r=>r.estado==="escalado").length, hecho:t.filter(r=>r.estado==="hecho").length, total:t.length };
+  return { pend:t.filter(r=>r.estado==="pendiente").length, esc:t.filter(r=>r.estado==="escalado").length, hecho:t.filter(r=>r.estado==="hecho").length, alta:t.filter(r=>{const p=renPrio(r);return p&&p.k==="alta";}).length, total:t.length };
 }
 function renChips(c){
   if (!c.total) return '<div class="muted">sin tareas</div>';
   let h = "";
+  if (c.alta) h += '<span class="c c-alta">'+c.alta+' alta</span>';
   if (c.pend) h += '<span class="c c-pend">'+c.pend+' pend</span>';
   if (c.esc) h += '<span class="c c-esc">'+c.esc+' escalada'+(c.esc>1?"s":"")+'</span>';
   if (c.hecho) h += '<span class="c c-hecho">'+c.hecho+' hecha'+(c.hecho>1?"s":"")+'</span>';
@@ -675,7 +694,7 @@ function renRenderTree(){
   if (!renSelPerson && miembros[0]) renSelPerson = miembros[0].email;
   const members = miembros.map(m => {
     const c = renCounts(scope, m.email);
-    return '<li><div class="node'+(renSelPerson===m.email?" sel":"")+'" onclick="renSelectPerson(\''+m.email+'\')">'
+    return '<li><div class="node'+(renSelPerson===m.email?" sel":"")+(c.alta?" altared":"")+'" onclick="renSelectPerson(\''+m.email+'\')">'
       +'<div class="nm">'+esc(m.nombre)+'</div><div class="rl">Equipo</div>'+renChips(c)+'</div></li>';
   }).join("");
   const liderC = lider ? renCounts(scope, lider.email) : {total:0};
@@ -701,7 +720,8 @@ function renDetail(){
     const pill = r.estado==="hecho" ? '<span class="pill p-hecho">Hecho</span>'
       : r.estado==="escalado" ? '<span class="pill p-esc">Escalado ↑</span>'
       : '<span class="pill p-pend">Pendiente</span>';
-    return '<div class="btask"><span class="tag alt">'+(TL[r.tipo]||r.tipo)+'</span><span class="ti">'+esc(r.titulo)+(r.cliente?' · <b>'+esc(r.cliente)+'</b>':'')+'</span>'+pill+'</div>';
+    const pr = renPrio(r); const prp = pr ? '<span class="pill '+pr.cls+'">'+pr.dot+' '+pr.label+'</span>' : '';
+    return '<div class="btask"><span class="tag alt">'+(TL[r.tipo]||r.tipo)+'</span><span class="ti">'+esc(r.titulo)+(r.cliente?' · <b>'+esc(r.cliente)+'</b>':'')+'</span>'+prp+pill+'</div>';
   }).join("");
   if (!tasks.length) rows = '<div class="muted" style="margin-top:10px;color:#9aa8b2;font-style:italic">Sin tareas asignadas.</div>';
   $("renDetail").innerHTML = '<div class="detail"><div class="dhead"><div class="av">'+ini+'</div><div><div class="dh-nm">'+esc(nm)+'</div><div class="dh-rl">'+tasks.length+' tarea'+(tasks.length===1?"":"s")+'</div></div></div>'+rows+'</div>';
