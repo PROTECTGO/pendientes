@@ -204,6 +204,10 @@
   .c-alta{background:#FCEEEC;color:#C0392B}
   .item.alta{border-color:#F0C2BD;background:#FFF8F7}
   .tree .node.altared{border-color:#F0C2BD}
+  #renAlert{display:none;align-items:center;gap:10px;background:#FCEEEC;border:1px solid #F0C2BD;border-radius:12px;padding:11px 14px;margin-bottom:10px}
+  #renAlert .ra-tx{flex:1;font-size:13px;color:#9c3d35}
+  #renAlert .ra-tx b{color:#C0392B}
+  #renAlert .ra-btn{border:1px solid #E2A39B;background:#fff;color:#C0392B;border-radius:999px;padding:6px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-body)}
 </style>
 </head>
 <body>
@@ -278,6 +282,7 @@
       <button class="vbtn on" data-view="lista">Lista</button>
       <button class="vbtn" data-view="arbol">Árbol</button>
     </div>
+    <div id="renAlert"></div>
     <div class="seg" id="renSeg">
       <button class="segbtn on" data-fn="renovacion">Renovación</button>
       <button class="segbtn" data-fn="retencion">Retención</button>
@@ -510,7 +515,7 @@ async function renLoad(){
   const { data, error } = await sb.from("tareas_renovacion").select("*").order("created_at", { ascending:false });
   if ($("renLoading")) $("renLoading").style.display = "none";
   if (error){ console.error(error); return; }
-  renRows = data || []; if (renMode === "arbol") renRenderTree(); else renRender();
+  renRows = data || []; renUpdateAlert(); if (renMode === "arbol") renRenderTree(); else renRender();
 }
 function renSubscribe(){
   if (renChan) sb.removeChannel(renChan);
@@ -664,6 +669,13 @@ function setRenMode(mode){
   if (!lista && $("renEmpty")) $("renEmpty").style.display = "none";
   if ($("renTree")) $("renTree").style.display = lista ? "none" : "block";
   if (lista) renRender(); else renRenderTree();
+}
+function renUpdateAlert(){
+  const el = $("renAlert"); if (!el) return;
+  const reds = renRows.filter(r => { const p = renPrio(r); return p && p.k === "alta"; });
+  if (!reds.length){ el.style.display = "none"; return; }
+  el.style.display = "flex";
+  el.innerHTML = '<span style="font-size:14px">🔴</span><span class="ra-tx"><b>'+reds.length+' tarea'+(reds.length>1?"s":"")+' en alta</b> — llevan 2+ días sin cerrar. ¡Gestiónalas!</span><button class="ra-btn" onclick="setRenMode(\'lista\')">Ver lista</button>';
 }
 function renPrio(r){
   if (r.estado === "hecho") return null;
