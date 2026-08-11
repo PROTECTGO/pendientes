@@ -223,6 +223,11 @@
   #renAlert .ra-tx b{color:#C0392B}
   #renAlert .ra-btn{border:1px solid #E2A39B;background:#fff;color:#C0392B;border-radius:999px;padding:6px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-body)}
 </style>
+
+<!-- ProtectGo · scripts compartidos (recuperacion de clave + novedades en tiempo real) -->
+<script src="https://protectgo.github.io/quick-quotes/pg-novedades.js"></script>
+<script>window.addEventListener('DOMContentLoaded',function(){ if(window.pgNovedadesAuto) pgNovedadesAuto('general'); });</script>
+<script defer src="https://protectgo.github.io/quick-quotes/pg-auth.js"></script>
 </head>
 <body>
 
@@ -775,7 +780,7 @@ $("renAdd").onclick = renAddTask;
 var PGV_URL="https://bwqzypuiqgxzsrtsueab.supabase.co";
 var PGV_KEY="sb_publishable_VbA94M3mF-Z6kgtPnda-cQ_diKF8L49";
 var PGV_ARCHIVO="pendientes/index.html";
-var PGV_VERSION=1;
+var PGV_VERSION=2;
 function pgvBanner(){
   if(document.getElementById('pgvBar'))return;
   var b=document.createElement('div');
