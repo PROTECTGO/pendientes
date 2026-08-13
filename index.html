@@ -375,14 +375,14 @@
       <div class="card" id="kamFormCard">
         <h3>Reportar pendiente a KAM</h3>
         <div class="frow" style="margin-top:4px">
-          <div class="fld"><label>Cliente / DBA</label><input id="kamCli" placeholder="Nombre del cliente"></div>
-          <div class="fld"><label>DOT (opcional)</label><input id="kamDot" placeholder="Número DOT"></div>
+          <div class="fld"><label>Asunto / Cliente</label><input id="kamCli" placeholder="Cliente o asunto del pendiente"></div>
+          <div class="fld" style="display:none"><label>DOT (opcional)</label><input id="kamDot" placeholder="Número DOT"></div>
         </div>
-        <div class="frow" style="margin-top:10px">
+        <div class="frow" style="margin-top:10px;display:none">
           <div class="fld"><label>Estado US (opcional)</label><input id="kamEstadoUS" placeholder="p. ej. TX" maxlength="2"></div>
         </div>
         <div class="frow" style="margin-top:10px"><div class="fld"><label>¿Qué se necesita?</label><textarea id="kamDes" rows="2" placeholder="Describe qué hay que hacer / activar / consolidar"></textarea></div></div>
-        <div class="frow" style="margin-top:10px"><div class="fld"><label>Nota inicial (opcional)</label><input id="kamNotaIni" placeholder="Contexto adicional"></div></div>
+        <div class="frow" style="margin-top:10px;display:none"><div class="fld"><label>Nota inicial (opcional)</label><input id="kamNotaIni" placeholder="Contexto adicional"></div></div>
         <button id="kamAdd">Reportar a KAM</button><span id="kamOk">✓ Reportado</span>
       </div>
       <div class="card" id="kamMyCard">
@@ -555,7 +555,7 @@ async function renInit(){
   else renRole = null;
   const isRen = (renRole !== null);
   const navSamu = document.querySelector('[data-nav="samu"]');
-  if (navSamu) navSamu.style.display = (isAdmin || !isRen) ? "flex" : "none";
+  if (navSamu) navSamu.style.display = isAdmin ? "flex" : "none";
   if ($("navRen")) $("navRen").style.display = isRen ? "flex" : "none";
   if (renRole === "admin" || renRole === "lider"){
     $("renAsig").innerHTML = equipo.map(e => '<option value="'+e.email+'|'+esc(e.nombre)+'">'+esc(e.nombre)+(e.rol==="lider"?" (líder)":"")+'</option>').join("");
@@ -851,6 +851,11 @@ async function kamInit(){
   const canTree = canManage;
   if ($("kamViewToggle")) $("kamViewToggle").style.display = canTree ? "inline-flex" : "none";
   setKamMode("lista");
+  // SAMU es el canal directo a direccion: solo lo ve el admin (Andres).
+  const navSamuK = document.querySelector('[data-nav="samu"]');
+  if (navSamuK) navSamuK.style.display = isAdmin ? "flex" : "none";
+  // Equipo KAM y vendedores aterrizan directo en KAM (renovacion conserva su area).
+  if (!isAdmin && (kamIsTeam || renRole === null)) switchArea("kam");
 }
 
 async function kamLoad(){
@@ -1131,7 +1136,7 @@ function setKamMode(mode){
 async function kamAddTask(){
   const cli = $("kamCli").value.trim();
   const des = $("kamDes").value.trim();
-  if (!cli){ alert("Escribe el cliente / DBA."); return; }
+  if (!cli){ alert("Escribe el asunto o el cliente."); return; }
   if (!des){ alert("Describe qué se necesita."); return; }
   const dot = $("kamDot").value.trim() || null;
   const eus = $("kamEstadoUS").value.trim().toUpperCase() || null;
