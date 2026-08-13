@@ -223,11 +223,6 @@
   #renAlert .ra-tx b{color:#C0392B}
   #renAlert .ra-btn{border:1px solid #E2A39B;background:#fff;color:#C0392B;border-radius:999px;padding:6px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-body)}
 </style>
-
-<!-- ProtectGo · scripts compartidos (recuperacion de clave + novedades en tiempo real) -->
-<script src="https://protectgo.github.io/quick-quotes/pg-novedades.js"></script>
-<script>window.addEventListener('DOMContentLoaded',function(){ if(window.pgNovedadesAuto) pgNovedadesAuto('general'); });</script>
-<script defer src="https://protectgo.github.io/quick-quotes/pg-auth.js"></script>
 </head>
 <body>
 
@@ -257,6 +252,7 @@
       </div>
       <a class="navlink on" data-nav="samu" onclick="switchArea('samu')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3l8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg> Modelo SAMU</a>
       <a class="navlink" id="navRen" data-nav="ren" onclick="switchArea('ren')" style="display:none"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2M20 19v-4h-4"/></svg> Renovación y Retención</a>
+      <a class="navlink" id="navKam" data-nav="kam" onclick="switchArea('kam')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> KAM</a>
       <div class="sfoot">v1 · Operación</div>
     </nav>
     <div class="main">
@@ -342,6 +338,61 @@
       <div id="renDetail"></div>
     </div>
   </div>
+
+  <div id="paneKam" style="display:none">
+    <div id="kamViewToggle" style="display:none">
+      <button class="vbtn on" data-view="lista">Lista</button>
+      <button class="vbtn" data-view="arbol">Árbol</button>
+    </div>
+    <div id="kamAlert"></div>
+    <div class="kpis" id="kamKpis"></div>
+
+    <!-- Vista equipo/líder/admin -->
+    <div id="kamTeamWrap">
+      <div class="card" id="kamBandejaCard" style="display:none">
+        <h3>Bandeja · Por asignar</h3>
+        <div id="kamBandejaEmpty" style="display:none;color:var(--mut);font-size:13px">Nada por asignar. 🎉</div>
+        <div id="kamBandejaList"></div>
+      </div>
+      <div id="kamBar">
+        <button class="rchip on" data-rf="todas">Todas</button>
+        <button class="rchip" data-rf="pendiente">Pendientes</button>
+        <button class="rchip" data-rf="escalado">Escaladas</button>
+        <button class="rchip" data-rf="hecho">Hechas</button>
+        <span id="kamCnt"></span>
+      </div>
+      <div id="kamLoading">Cargando…</div>
+      <div id="kamList"></div>
+      <div id="kamEmpty" style="display:none">No hay tareas aquí. 🎉</div>
+      <div id="kamTree" style="display:none">
+        <div id="kamTreeWrap"></div>
+        <div id="kamDetail"></div>
+      </div>
+    </div>
+
+    <!-- Vista vendedor (no pertenece a kam_equipo) -->
+    <div id="kamVendorWrap" style="display:none">
+      <div class="card" id="kamFormCard">
+        <h3>Reportar pendiente a KAM</h3>
+        <div class="frow" style="margin-top:4px">
+          <div class="fld"><label>Cliente / DBA</label><input id="kamCli" placeholder="Nombre del cliente"></div>
+          <div class="fld"><label>DOT (opcional)</label><input id="kamDot" placeholder="Número DOT"></div>
+        </div>
+        <div class="frow" style="margin-top:10px">
+          <div class="fld"><label>Estado US (opcional)</label><input id="kamEstadoUS" placeholder="p. ej. TX" maxlength="2"></div>
+        </div>
+        <div class="frow" style="margin-top:10px"><div class="fld"><label>¿Qué se necesita?</label><textarea id="kamDes" rows="2" placeholder="Describe qué hay que hacer / activar / consolidar"></textarea></div></div>
+        <div class="frow" style="margin-top:10px"><div class="fld"><label>Nota inicial (opcional)</label><input id="kamNotaIni" placeholder="Contexto adicional"></div></div>
+        <button id="kamAdd">Reportar a KAM</button><span id="kamOk">✓ Reportado</span>
+      </div>
+      <div class="card" id="kamMyCard">
+        <h3>Mis reportes</h3>
+        <div id="kamMyLoading" style="color:var(--mut);font-size:13px;font-family:var(--font-num)">Cargando…</div>
+        <div id="kamMyList"></div>
+        <div id="kamMyEmpty" style="display:none;color:var(--mut);font-size:13px">Aún no has reportado nada. 🎉</div>
+      </div>
+    </div>
+  </div>
     </div><!-- /.main -->
   </div><!-- /.shell -->
 </div>
@@ -393,7 +444,7 @@ async function enter(user){
   } else {
     document.querySelector('header h2').textContent = 'Mis pendientes para Andrés';
   }
-  load(); subscribe(); samuTitle = document.querySelector("header h2").textContent; renInit();
+  load(); subscribe(); samuTitle = document.querySelector("header h2").textContent; renInit(); kamInit();
 }
 $('lbtn').onclick = tryLogin;
 $('lp').addEventListener('keydown', e => { if(e.key==='Enter') tryLogin(); });
@@ -519,11 +570,16 @@ function switchArea(a){
   document.querySelectorAll("[data-nav]").forEach(n => n.classList.toggle("on", n.dataset.nav === a));
   $("paneSamu").style.display = (a === "samu") ? "" : "none";
   $("paneRen").style.display = (a === "ren") ? "" : "none";
+  if ($("paneKam")) $("paneKam").style.display = (a === "kam") ? "" : "none";
   const eb = $("areaEyebrow"), h2 = document.querySelector("header h2");
   if (a === "ren"){
     eb.textContent = "RENOVACIÓN Y RETENCIÓN";
     h2.textContent = (renRole === "miembro") ? "Mis tareas del área" : "Lo que asigné al área";
     if (!renStarted){ renStarted = true; renLoad(); renSubscribe(); }
+  } else if (a === "kam"){
+    eb.textContent = "KAM";
+    h2.textContent = kamIsTeam ? "Bandeja del equipo KAM" : "Reportar pendiente a KAM";
+    if (!kamStarted){ kamStarted = true; kamLoad(); kamSubscribe(); }
   } else {
     eb.textContent = "MODELO SAMU";
     h2.textContent = samuTitle;
@@ -773,43 +829,361 @@ document.querySelectorAll("#renTipos .tipo").forEach(b => b.onclick = () => {
   b.classList.add("on"); renTipo = b.dataset.t;
 });
 $("renAdd").onclick = renAddTask;
-</script>
-<script>
-(function(){
-"use strict";
-var PGV_URL="https://bwqzypuiqgxzsrtsueab.supabase.co";
-var PGV_KEY="sb_publishable_VbA94M3mF-Z6kgtPnda-cQ_diKF8L49";
-var PGV_ARCHIVO="pendientes/index.html";
-var PGV_VERSION=2;
-function pgvBanner(){
-  if(document.getElementById('pgvBar'))return;
-  var b=document.createElement('div');
-  b.id='pgvBar';
-  b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#FFB400;color:#0D3040;font:600 13px Arial,Helvetica,sans-serif;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.18);';
-  b.innerHTML='\uD83D\uDD04 Hay una versi\u00f3n nueva de esta p\u00e1gina. <button id="pgvBtn" type="button" style="font:700 13px Arial,Helvetica,sans-serif;background:#0D3040;color:#fff;border:none;border-radius:6px;padding:7px 14px;cursor:pointer;">Actualizar ahora</button> <span style="opacity:.75">(o Ctrl + Shift + R)</span>';
-  document.body.appendChild(b);
-  document.getElementById('pgvBtn').addEventListener('click',function(){location.reload(true);});
+
+/* ===== KAM (espejo de Renovación y Retención) ===== */
+let kamRole = null, kamIsTeam = false, kamEquipo = [], kamRows = [], kamMyRows = [],
+    kamFilter = "todas", kamChan = null, kamStarted = false, openKamNotas = null,
+    kamMode = "lista", kamSelPerson = null;
+
+async function kamInit(){
+  const { data: eq } = await sb.from("kam_equipo").select("email,nombre,rol");
+  kamEquipo = (eq || []).slice().sort((a,b)=> (a.rol==="lider"?-1:0) - (b.rol==="lider"?-1:0));
+  const mine = kamEquipo.find(e => e.email === me.email);
+  if (isAdmin) kamRole = "admin";
+  else if (mine && mine.rol === "lider") kamRole = "lider";
+  else if (mine) kamRole = "miembro";
+  else kamRole = null;
+  kamIsTeam = (kamRole !== null);
+  if ($("kamTeamWrap")) $("kamTeamWrap").style.display = kamIsTeam ? "" : "none";
+  if ($("kamVendorWrap")) $("kamVendorWrap").style.display = kamIsTeam ? "none" : "";
+  const canManage = (kamRole === "admin" || kamRole === "lider");
+  if ($("kamBandejaCard")) $("kamBandejaCard").style.display = canManage ? "" : "none";
+  const canTree = canManage;
+  if ($("kamViewToggle")) $("kamViewToggle").style.display = canTree ? "inline-flex" : "none";
+  setKamMode("lista");
 }
-function pgvRun(){
-  try{
-    var c=window.supabase.createClient(PGV_URL,PGV_KEY);
-    c.from('app_versiones').select('version').eq('archivo',PGV_ARCHIVO).maybeSingle().then(function(r){
-      if(!r||r.error||!r.data)return;
-      if(Number(r.data.version)>PGV_VERSION)pgvBanner();
-    });
-  }catch(e){}
+
+async function kamLoad(){
+  const { data, error } = await sb.from("tareas_kam").select("*").order("created_at", { ascending:false });
+  if ($("kamLoading")) $("kamLoading").style.display = "none";
+  if ($("kamMyLoading")) $("kamMyLoading").style.display = "none";
+  if (error){ console.error(error); return; }
+  kamRows = data || [];
+  if (kamIsTeam){
+    kamUpdateAlert();
+    if (kamMode === "arbol") kamRenderTree(); else kamRender();
+  } else {
+    kamMyRows = kamRows.filter(r => r.creado_por_email === me.email);
+    kamRenderMy();
+  }
 }
-function pgvCheck(){
-  if(window.supabase&&window.supabase.createClient){pgvRun();return;}
-  var s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-  s.onload=pgvRun;
-  document.head.appendChild(s);
+function kamSubscribe(){
+  if (kamChan) sb.removeChannel(kamChan);
+  kamChan = sb.channel("kam-live")
+    .on("postgres_changes", { event:"*", schema:"public", table:"tareas_kam" }, () => kamLoad())
+    .on("postgres_changes", { event:"*", schema:"public", table:"tareas_kam_notas" }, () => { if (openKamNotas) loadKamNotas(openKamNotas); })
+    .subscribe();
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(pgvCheck,400);});
-else setTimeout(pgvCheck,400);
-setInterval(pgvCheck,600000);
-})();
+
+/* ---- helpers de rol/asignación ---- */
+function kamMiembros(){ return kamEquipo.filter(e => e.rol === "miembro").slice().sort((a,b)=> a.nombre.localeCompare(b.nombre)); }
+function kamLider(){ return kamEquipo.find(e => e.rol === "lider"); }
+function kamNextAssignee(){
+  const miembros = kamMiembros();
+  if (!miembros.length){ const l = kamLider(); return l ? { email:l.email, nombre:l.nombre, warn:true } : null; }
+  const emails = miembros.map(m => m.email);
+  const asignadas = kamRows.filter(r => emails.includes(r.asignado_email))
+    .slice().sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  if (!asignadas.length) return { email: miembros[0].email, nombre: miembros[0].nombre, warn:false };
+  const last = asignadas[0].asignado_email;
+  const idx = emails.indexOf(last);
+  const next = miembros[(idx + 1) % miembros.length];
+  return { email: next.email, nombre: next.nombre, warn:false };
+}
+
+/* ---- KPIs / prioridad (mismo patrón que Renovación) ---- */
+function kamPrio(r){
+  if (r.estado === "hecho") return null;
+  const days = Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000);
+  if (days >= 2) return {k:"alta", cls:"p-alta", dot:"🔴", label:"Alta · "+days+" días"};
+  if (days >= 1) return {k:"media", cls:"p-med", dot:"🟡", label:"Atención · 1 día"};
+  return {k:"baja", cls:"p-baja", dot:"🟢", label:"Hoy"};
+}
+function kamUpdateAlert(){
+  const el = $("kamAlert"); if (!el) return;
+  const reds = kamRows.filter(r => { const p = kamPrio(r); return p && p.k === "alta"; });
+  if (!reds.length){ el.style.display = "none"; return; }
+  el.style.display = "flex";
+  el.innerHTML = '<span style="font-size:14px">🔴</span><span class="ra-tx"><b>'+reds.length+' tarea'+(reds.length>1?"s":"")+' en alta</b> — llevan 2+ días sin cerrar. ¡Gestiónalas!</span><button class="ra-btn" onclick="setKamMode(\'lista\')">Ver lista</button>';
+}
+
+function kamRender(){
+  const scope = kamRows.filter(r => r.estado !== "por_asignar");
+  const vis = scope.filter(r => kamFilter === "todas" || r.estado === kamFilter);
+  const prank = {alta:0, media:1, baja:2};
+  vis.sort((a,b) => { const pa=kamPrio(a), pb=kamPrio(b); const ra=pa?prank[pa.k]:3, rb=pb?prank[pb.k]:3; if(ra!==rb) return ra-rb; return new Date(b.created_at)-new Date(a.created_at); });
+  const altaN = kamRows.filter(r => { const p=kamPrio(r); return p && p.k==="alta"; }).length;
+  $("kamKpis").innerHTML =
+    kpi("Por asignar", kamRows.filter(r=>r.estado==="por_asignar").length) +
+    kpi("En curso", kamRows.filter(r=>r.estado==="pendiente").length) +
+    kpi("Alta", altaN, "#D5594F") +
+    kpi("Hechas", kamRows.filter(r=>r.estado==="hecho").length, "#1F9D6B");
+  const nPend = scope.filter(r=>r.estado!=="hecho").length;
+  $("kamCnt").textContent = nPend + " sin terminar";
+  const list = $("kamList"); list.innerHTML = "";
+  $("kamEmpty").style.display = vis.length ? "none" : "block";
+  vis.forEach(r => list.appendChild(kamCard(r)));
+
+  const bandeja = kamRows.filter(r => r.estado === "por_asignar").slice()
+    .sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+  if ($("kamBandejaCard") && $("kamBandejaCard").style.display !== "none"){
+    const bl = $("kamBandejaList"); bl.innerHTML = "";
+    $("kamBandejaEmpty").style.display = bandeja.length ? "none" : "block";
+    bandeja.forEach(r => bl.appendChild(kamBandejaItem(r)));
+  }
+}
+
+function kamBandejaItem(r){
+  const it = document.createElement("div");
+  const prio = kamPrio(r);
+  it.className = "item" + (prio && prio.k==="alta" ? " alta" : "");
+  const sug = kamNextAssignee();
+  const opciones = kamEquipo.map(e => '<option value="'+e.email+'|'+esc(e.nombre)+'"'+(sug && sug.email===e.email?" selected":"")+'>'+esc(e.nombre)+(e.rol==="lider"?" (líder)":"")+'</option>').join("");
+  it.innerHTML = '<div class="rbody">'
+    + '<div class="rtop"><span class="tag alt">Por asignar</span>'+(prio?'<span class="prio '+prio.cls+'">'+prio.dot+' '+prio.label+'</span>':'')+'</div>'
+    + '<div class="cli">'+esc(r.cliente||"(sin cliente)")+(r.dot?' · DOT '+esc(r.dot):"")+(r.estado_us?' · '+esc(r.estado_us):"")+'</div>'
+    + '<div class="des">'+esc(r.descripcion)+'</div>'
+    + '<div class="meta">Reportado por <b>'+esc(r.creado_por_nombre||"—")+'</b> · '+hora(r.created_at)+'</div>'
+    + (sug && sug.warn ? '<div class="meta" style="color:var(--pend)">Aún sin miembros configurados — se sugiere el líder.</div>' : '')
+    + '<div class="frow" style="margin-top:9px;align-items:flex-end"><div class="fld" style="min-width:160px"><label>Asignar a</label><select class="kamAsigSel">'+opciones+'</select></div></div>'
+    + '<div class="acts"></div>'
+    + '</div>';
+  const acts = it.querySelector(".acts");
+  const sel = it.querySelector(".kamAsigSel");
+  const b = document.createElement("button"); b.className = "actbtn prim"; b.textContent = "Asignar";
+  b.onclick = () => kamAsignar(r, sel.value);
+  acts.appendChild(b);
+  return it;
+}
+
+async function kamAsignar(r, value){
+  const parts = (value || "|").split("|");
+  if (!parts[0]){ alert("Elige a quién asignar."); return; }
+  const { error } = await sb.from("tareas_kam").update({ estado:"pendiente", asignado_email:parts[0], asignado_nombre:parts[1] }).eq("id", r.id);
+  if (error){ alert("Error: "+error.message); return; }
+  await kamNota(r.id, "Asignada a "+(parts[1]||"—"), "reasignado");
+  kamLoad();
+}
+
+function kamCard(r){
+  const canManage = (kamRole === "admin" || kamRole === "lider");
+  const isAssignee = r.asignado_email === me.email;
+  const it = document.createElement("div");
+  const prio = kamPrio(r);
+  it.className = "item" + (r.estado==="hecho"?" done":"") + (r.estado==="escalado"?" esc":"") + (prio&&prio.k==="alta"?" alta":"");
+  const estPill = r.estado==="hecho" ? '<span class="st h">Hecho</span>'
+    : r.estado==="escalado" ? '<span class="st e">Escalado'+(r.escalado_a==="direccion"?" a dirección":" al líder")+'</span>'
+    : '<span class="st p">Pendiente</span>';
+  it.innerHTML = '<div class="rbody">'
+    + '<div class="rtop"><span class="tag">KAM</span>'+estPill+(prio?'<span class="prio '+prio.cls+'">'+prio.dot+' '+prio.label+'</span>':'')+'</div>'
+    + '<div class="cli">'+esc(r.cliente||"(sin cliente)")+(r.dot?' · DOT '+esc(r.dot):"")+(r.estado_us?' · '+esc(r.estado_us):"")+'</div>'
+    + '<div class="des">'+esc(r.descripcion)+'</div>'
+    + '<div class="meta">Reportado por <b>'+esc(r.creado_por_nombre||"—")+'</b>'+(r.asignado_nombre?' · asignado a <b>'+esc(r.asignado_nombre)+'</b>':'')+' · '+hora(r.created_at)
+      + (r.estado==="hecho" && r.procesado_por_nombre ? ' · resuelto por <b>'+esc(r.procesado_por_nombre)+'</b>' : '') + '</div>'
+    + '<div class="acts"></div>'
+    + '<div class="notas" data-kamnotas="'+r.id+'"></div>'
+    + '</div>';
+  const acts = it.querySelector(".acts");
+  function addBtn(label, fn, cls){ const b=document.createElement("button"); b.className="actbtn"+(cls?(" "+cls):""); b.textContent=label; b.onclick=fn; acts.appendChild(b); }
+  if (r.estado !== "hecho"){
+    if (canManage || isAssignee) addBtn("✓ Hecho", ()=>kamDone(r), "prim");
+    if (kamRole === "miembro" && isAssignee && r.estado !== "escalado") addBtn("↑ Escalar", ()=>kamEscalar(r,"lider"), "warn");
+    if (canManage) addBtn("Reasignar", ()=>kamReasignar(r));
+    if (kamRole === "lider" && r.estado !== "escalado") addBtn("↑ Subir a dirección", ()=>kamEscalar(r,"direccion"), "warn");
+    if (canManage && r.estado === "escalado") addBtn("Resolver", ()=>kamResolver(r), "prim");
+  }
+  addBtn("Nota", ()=>kamAddNota(r));
+  addBtn("Bitácora", ()=>toggleKamNotas(r, it.querySelector(".notas")));
+  if (canManage) addBtn("✕", ()=>kamDel(r), "del");
+  return it;
+}
+
+async function kamNota(tareaId, texto, evento){
+  return sb.from("tareas_kam_notas").insert({ tarea_id:tareaId, autor_email:me.email, autor_nombre:nameFromEmail(me.email), texto:texto, evento:evento||"nota" });
+}
+async function kamDone(r){
+  const nota = prompt("¿Cómo se realizó? (ya dejaste el comentario en el CRM)");
+  if (!nota){ alert("La nota de cierre es obligatoria."); return; }
+  const { error } = await sb.from("tareas_kam").update({ estado:"hecho", done_at:new Date().toISOString(), escalado_a:null, procesado_por_nombre: nameFromEmail(me.email) }).eq("id", r.id);
+  if (error){ alert("Error: "+error.message); return; }
+  await kamNota(r.id, nota, "cierre"); kamLoad();
+}
+async function kamEscalar(r, destino){
+  const motivo = prompt("¿Por qué lo escalas? (qué necesitas / motivo)");
+  if (motivo === null) return;
+  const { error } = await sb.from("tareas_kam").update({ estado:"escalado", escalado_a:destino }).eq("id", r.id);
+  if (error){ alert("Error: "+error.message); return; }
+  await kamNota(r.id, "Escalado"+(destino==="direccion"?" a dirección":" al líder")+(motivo?(": "+motivo):""), "escalado"); kamLoad();
+}
+async function kamResolver(r){
+  const { error } = await sb.from("tareas_kam").update({ estado:"pendiente", escalado_a:null }).eq("id", r.id);
+  if (error){ alert("Error: "+error.message); return; }
+  await kamNota(r.id, "Escalado resuelto, vuelve a pendiente", "nota"); kamLoad();
+}
+async function kamReasignar(r){
+  if (!kamEquipo.length){ alert("No hay equipo KAM cargado."); return; }
+  const lista = kamEquipo.map((e,i)=>(i+1)+". "+e.nombre+(e.rol==="lider"?" (líder)":"")).join("\n");
+  const sel = prompt("Reasignar a:\n"+lista+"\n\nEscribe el número:");
+  if (!sel) return;
+  const idx = parseInt(sel,10) - 1;
+  if (isNaN(idx) || !kamEquipo[idx]){ alert("Opción inválida."); return; }
+  const m = kamEquipo[idx];
+  const { error } = await sb.from("tareas_kam").update({ asignado_email:m.email, asignado_nombre:m.nombre, estado: r.estado==="por_asignar"?"pendiente":r.estado }).eq("id", r.id);
+  if (error){ alert("Error: "+error.message); return; }
+  await kamNota(r.id, "Reasignado a "+m.nombre, "reasignado"); kamLoad();
+}
+async function kamAddNota(r){
+  const t = prompt("Escribe una nota:");
+  if (!t) return;
+  const { error } = await kamNota(r.id, t, "nota");
+  if (error){ alert("Error: "+error.message); return; }
+  if (openKamNotas === r.id) loadKamNotas(r.id);
+}
+async function kamDel(r){
+  if (!confirm("¿Eliminar esta tarea?")) return;
+  const { error } = await sb.from("tareas_kam").delete().eq("id", r.id);
+  if (error){ alert("Error: "+error.message); return; }
+  kamLoad();
+}
+async function toggleKamNotas(r, container){
+  if (openKamNotas === r.id){ openKamNotas = null; container.innerHTML = ""; return; }
+  openKamNotas = r.id; container.innerHTML = '<div style="font-size:12px;color:var(--mut);padding:4px">Cargando…</div>';
+  loadKamNotas(r.id);
+}
+async function loadKamNotas(id){
+  const { data } = await sb.from("tareas_kam_notas").select("*").eq("tarea_id", id).order("created_at", { ascending:true });
+  const c = document.querySelector('[data-kamnotas="'+id+'"]');
+  if (!c) return;
+  c.innerHTML = (data && data.length)
+    ? data.map(n => '<div class="nota"><b>'+esc(n.autor_nombre)+'</b> · '+hora(n.created_at)+'<div>'+esc(n.texto)+'</div></div>').join("")
+    : '<div style="font-size:12px;color:var(--mut);padding:4px">Sin notas aún.</div>';
+}
+
+/* ---- Vista Árbol (líder/admin) ---- */
+function kamCounts(scope, email){
+  const t = scope.filter(r => r.asignado_email === email);
+  return { pend:t.filter(r=>r.estado==="pendiente").length, esc:t.filter(r=>r.estado==="escalado").length, hecho:t.filter(r=>r.estado==="hecho").length, alta:t.filter(r=>{const p=kamPrio(r);return p&&p.k==="alta";}).length, total:t.length };
+}
+function kamChips(c){
+  if (!c.total) return '<div class="muted">sin tareas</div>';
+  let h = "";
+  if (c.alta) h += '<span class="c c-alta">'+c.alta+' alta</span>';
+  if (c.pend) h += '<span class="c c-pend">'+c.pend+' pend</span>';
+  if (c.esc) h += '<span class="c c-esc">'+c.esc+' escalada'+(c.esc>1?"s":"")+'</span>';
+  if (c.hecho) h += '<span class="c c-hecho">'+c.hecho+' hecha'+(c.hecho>1?"s":"")+'</span>';
+  return '<div class="chips">'+h+'</div>';
+}
+function kamRenderTree(){
+  const scope = kamRows.filter(r => r.estado !== "por_asignar");
+  const lider = kamLider();
+  const miembros = kamMiembros();
+  const escDireccion = scope.filter(r => r.estado==="escalado" && r.escalado_a==="direccion").length;
+  const escLider = scope.filter(r => r.estado==="escalado" && r.escalado_a==="lider").length;
+  if (!kamSelPerson && miembros[0]) kamSelPerson = miembros[0].email;
+  const members = miembros.map(m => {
+    const c = kamCounts(scope, m.email);
+    return '<li><div class="node'+(kamSelPerson===m.email?" sel":"")+(c.alta?" altared":"")+'" onclick="kamSelectPerson(\''+m.email+'\')">'
+      +'<div class="nm">'+esc(m.nombre)+'</div><div class="rl">Equipo KAM</div>'+kamChips(c)+'</div></li>';
+  }).join("");
+  const liderC = lider ? kamCounts(scope, lider.email) : {total:0};
+  const liderEmail = lider ? lider.email : "";
+  const tree = '<ul class="tree"><li>'
+    + '<div class="node ink"><div class="nm">Dirección · Andrés</div><div class="rl">supervisa'+(escDireccion?' · <span class="esc">'+escDireccion+' escalada'+(escDireccion>1?"s":"")+' a ti ↑</span>':'')+'</div></div>'
+    + '<ul><li>'
+    + '<div class="node ink'+(kamSelPerson===liderEmail?" sel":"")+'" onclick="kamSelectPerson(\''+liderEmail+'\')"><div class="nm">'+(lider?esc(lider.nombre):"Brahian")+' · Líder KAM</div><div class="rl">'+scope.length+' en el área'+(escLider?' · <span class="esc">'+escLider+' escalada'+(escLider>1?"s":"")+' ↑</span>':'')+'</div>'+(liderC.total?kamChips(liderC):"")+'</div>'
+    + '<ul>'+(members||'<li><div class="muted">Sin equipo</div></li>')+'</ul>'
+    + '</li></ul></li></ul>';
+  $("kamTreeWrap").innerHTML = tree;
+  kamDetail();
+}
+function kamSelectPerson(email){ kamSelPerson = email; kamRenderTree(); }
+function kamDetail(){
+  const scope = kamRows.filter(r => r.estado !== "por_asignar");
+  const tasks = scope.filter(r => r.asignado_email === kamSelPerson);
+  const person = kamEquipo.find(e => e.email === kamSelPerson);
+  const nm = person ? person.nombre : "—";
+  const ini = nm.split(" ").map(w=>w[0]||"").slice(0,2).join("").toUpperCase();
+  let rowsHtml = tasks.map(r => {
+    const pill = r.estado==="hecho" ? '<span class="pill p-hecho">Hecho</span>'
+      : r.estado==="escalado" ? '<span class="pill p-esc">Escalado ↑</span>'
+      : '<span class="pill p-pend">Pendiente</span>';
+    const pr = kamPrio(r); const prp = pr ? '<span class="pill '+pr.cls+'">'+pr.dot+' '+pr.label+'</span>' : '';
+    return '<div class="btask"><span class="tag alt">KAM</span><span class="ti">'+esc(r.descripcion)+(r.cliente?' · <b>'+esc(r.cliente)+'</b>':'')+'</span>'+prp+pill+'</div>';
+  }).join("");
+  if (!tasks.length) rowsHtml = '<div class="muted" style="margin-top:10px;color:#9aa8b2;font-style:italic">Sin tareas asignadas.</div>';
+  $("kamDetail").innerHTML = '<div class="detail"><div class="dhead"><div class="av">'+ini+'</div><div><div class="dh-nm">'+esc(nm)+'</div><div class="dh-rl">'+tasks.length+' tarea'+(tasks.length===1?"":"s")+'</div></div></div>'+rowsHtml+'</div>';
+}
+
+function setKamMode(mode){
+  kamMode = mode;
+  document.querySelectorAll("#kamViewToggle .vbtn").forEach(b => b.classList.toggle("on", b.dataset.view === mode));
+  const lista = (mode === "lista");
+  const canManage = (kamRole === "admin" || kamRole === "lider");
+  if ($("kamBandejaCard")) $("kamBandejaCard").style.display = (lista && canManage) ? "" : "none";
+  if ($("kamBar")) $("kamBar").style.display = lista ? "flex" : "none";
+  if ($("kamList")) $("kamList").style.display = lista ? "" : "none";
+  if (!lista && $("kamEmpty")) $("kamEmpty").style.display = "none";
+  if ($("kamTree")) $("kamTree").style.display = lista ? "none" : "block";
+  if (lista) kamRender(); else kamRenderTree();
+}
+
+/* ---- Vista vendedor ---- */
+async function kamAddTask(){
+  const cli = $("kamCli").value.trim();
+  const des = $("kamDes").value.trim();
+  if (!cli){ alert("Escribe el cliente / DBA."); return; }
+  if (!des){ alert("Describe qué se necesita."); return; }
+  const dot = $("kamDot").value.trim() || null;
+  const eus = $("kamEstadoUS").value.trim().toUpperCase() || null;
+  const notaIni = $("kamNotaIni").value.trim();
+  $("kamAdd").disabled = true;
+  const { data, error } = await sb.from("tareas_kam").insert({
+    cliente: cli, dot: dot, estado_us: eus, descripcion: des, estado: "por_asignar",
+    creado_por_email: me.email, creado_por_nombre: nameFromEmail(me.email), origen: "app"
+  }).select().single();
+  $("kamAdd").disabled = false;
+  if (error){ alert("Error guardando: "+error.message); return; }
+  if (notaIni) await kamNota(data.id, notaIni, "nota");
+  $("kamCli").value = ""; $("kamDot").value = ""; $("kamEstadoUS").value = ""; $("kamDes").value = ""; $("kamNotaIni").value = "";
+  $("kamOk").style.display = "inline"; setTimeout(() => $("kamOk").style.display = "none", 1800);
+  kamLoad();
+}
+function kamRenderMy(){
+  const list = $("kamMyList"); if (!list) return;
+  list.innerHTML = "";
+  $("kamMyEmpty").style.display = kamMyRows.length ? "none" : "block";
+  kamMyRows.slice().sort((a,b)=> new Date(b.created_at)-new Date(a.created_at)).forEach(r => list.appendChild(kamMyCard(r)));
+}
+function kamMyCard(r){
+  const it = document.createElement("div");
+  const prio = kamPrio(r);
+  it.className = "item" + (r.estado==="hecho"?" done":"") + (r.estado==="escalado"?" esc":"");
+  const estLabel = {por_asignar:"Por asignar", pendiente:"En curso", escalado:"Escalado", hecho:"Hecho"}[r.estado] || r.estado;
+  const estPill = r.estado==="hecho" ? '<span class="st h">Hecho</span>'
+    : r.estado==="escalado" ? '<span class="st e">Escalado</span>'
+    : '<span class="st p">'+estLabel+'</span>';
+  it.innerHTML = '<div class="rbody">'
+    + '<div class="rtop">'+estPill+(prio?'<span class="prio '+prio.cls+'">'+prio.dot+' '+prio.label+'</span>':'')+'</div>'
+    + '<div class="cli">'+esc(r.cliente||"(sin cliente)")+(r.dot?' · DOT '+esc(r.dot):"")+(r.estado_us?' · '+esc(r.estado_us):"")+'</div>'
+    + '<div class="des">'+esc(r.descripcion)+'</div>'
+    + '<div class="meta">'+hora(r.created_at)+(r.asignado_nombre?' · asignado a <b>'+esc(r.asignado_nombre)+'</b>':'')+'</div>'
+    + '<div class="acts"></div>'
+    + '<div class="notas" data-kamnotas="'+r.id+'"></div>'
+    + '</div>';
+  const acts = it.querySelector(".acts");
+  function addBtn(label, fn){ const b=document.createElement("button"); b.className="actbtn"; b.textContent=label; b.onclick=fn; acts.appendChild(b); }
+  addBtn("Nota", ()=>kamAddNota(r));
+  addBtn("Bitácora", ()=>toggleKamNotas(r, it.querySelector(".notas")));
+  return it;
+}
+
+/* handlers de controles del pane KAM */
+document.querySelectorAll("#kamViewToggle .vbtn").forEach(b => b.onclick = () => setKamMode(b.dataset.view));
+document.querySelectorAll("#kamBar .rchip").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#kamBar .rchip").forEach(x => x.classList.remove("on"));
+  b.classList.add("on"); kamFilter = b.dataset.rf; kamRender();
+});
+if ($("kamAdd")) $("kamAdd").onclick = kamAddTask;
 </script>
 </body>
 </html>
